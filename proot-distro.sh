@@ -2,7 +2,7 @@
 ##
 ## Script for managing proot'ed Linux distribution installations in Termux.
 ##
-## Copyright (C) 2020 Leonid Pliushch <leonid.pliushch@gmail.com>
+## Copyright (C) 2020-2021 Leonid Pliushch <leonid.pliushch@gmail.com>
 ##
 ## This program is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 ## along with this program. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-PROGRAM_VERSION="1.10.0"
+PROGRAM_VERSION="2.0.0-dev"
 
 #############################################################################
 #
@@ -115,12 +115,13 @@ is_distro_installed() {
 #  2. Checks whether requested distribution is installed, if not - continue.
 #  3. Source the distribution configuration plug-in which contains the
 #     functionality necessary for installation. It must define at least
-#     get_download_url() function which returns a download URL and SHA-256.
+#     TARBALL_URL and TARBALL_SHA256 associative array for at least one CPU
+#     architecture.
 #  4. Download the rootfs archive, if it is not available in cache.
 #  5. Verify the rootfs archive if we have a SHA-256 for it. Otherwise print
 #     a warning stating that integrity cannot be verified.
 #  6. Extract the rootfs by using `tar` running under proot with link2symlink
-#     extension.
+#     extension. *Don't tell me that this is too slow.*
 #  7. Write environment variables configuration to /etc/profile.d/termux-proot.sh.
 #     If profile.d directory is not available, append to /etc/profile.
 #  8. Write default /etc/resolv.conf.
@@ -253,36 +254,37 @@ command_install() {
 		# Needed for compatibility with some devices.
 		#export PROOT_NO_SECCOMP=1
 
-		# Some distributions store rootfs in subdirectory - in this case
-		# this variable should be set to 1.
-		DISTRO_TARBALL_STRIP_OPT=0
+		# This should be overridden in distro plug-in with valid URL for
+		# each architecture where possible.
+		TARBALL_URL["aarch64"]=""
+		TARBALL_URL["arm"]=""
+		TARBALL_URL["i686"]=""
+		TARBALL_URL["x86_64"]=""
+
+		# This should be overridden in distro plug-in with valid SHA-256
+		# for corresponding tarballs.
+		TARBALL_SHA256["aarch64"]=""
+		TARBALL_SHA256["arm"]=""
+		TARBALL_SHA256["i686"]=""
+		TARBALL_SHA256["x86_64"]=""
+
+		# If your content inside tarball isn't stored in subdirectory,
+		# you can override this variable in distro plug-in with 0.
+		TARBALL_STRIP_OPT=1
 
 		# Distribution plug-in contains steps on how to get download URL
 		# and further post-installation configuration.
 		source "${distro_plugin_script}"
 
-		local integrity_sha256
-		local download_url
-		if declare -f -F get_download_url >/dev/null 2>&1; then
-			integrity_sha256=$(get_download_url | cut -d'|' -f1)
-			download_url=$(get_download_url | cut -d'|' -f2-)
-
-			# If this is not a HEX string, then we probably got an URL instead of
-			# SHA-256. In this case treat that integrity checking was disabled.
-			if ! grep -qP '^[0-9a-fA-F]+$' <<< "${integrity_sha256}"; then
-				msg "${BLUE}[${RED}!${BLUE}] ${CYAN}Got malformed SHA-256 string, considering it as URL.${RST}"
-				download_url="$integrity_sha256"
-				integrity_sha256=""
-			fi
-		else
-			msg
-			msg "${BRED}Error: get_download_url() is not defined in ${distro_plugin_script}${RST}"
-			msg
+		# Cannot proceed without URL and SHA-256.
+		if [ -z "${TARBALL_URL["$DISTRO_ARCH"]}" ]; then
+			msg "${BLUE}[${RED}!${BLUE}] ${CYAN}Sorry, but distribution download URL is not defined for CPU architecture '$DISTRO_ARCH'.${RST}"
 			return 1
 		fi
-
-		if [ -z "$download_url" ]; then
-			msg "${BLUE}[${RED}!${BLUE}] ${CYAN}Sorry, but distribution download URL is not defined for CPU architecture '$DISTRO_ARCH'.${RST}"
+		if ! grep -qP '^[0-9a-fA-F]+$' <<< "${TARBALL_SHA256["$DISTRO_ARCH"]}"; then
+			msg
+			msg "${BRED}Error: got malformed SHA-256 from ${distro_plugin_script}${RST}"
+			msg
 			return 1
 		fi
 
@@ -292,7 +294,7 @@ command_install() {
 		fi
 
 		local tarball_name
-		tarball_name=$(basename "$download_url")
+		tarball_name=$(basename "${TARBALL_URL["$DISTRO_ARCH"]}")
 
 		if [ ! -f "${DOWNLOAD_CACHE_DIR}/${tarball_name}" ]; then
 			msg "${BLUE}[${GREEN}*${BLUE}] ${CYAN}Downloading rootfs tarball...${RST}"
@@ -303,7 +305,7 @@ command_install() {
 			msg
 			rm -f "${DOWNLOAD_CACHE_DIR}/${tarball_name}.tmp"
 			if ! curl --fail --retry 5 --retry-connrefused --retry-delay 5 --location \
-				--output "${DOWNLOAD_CACHE_DIR}/${tarball_name}.tmp" "$download_url"; then
+				--output "${DOWNLOAD_CACHE_DIR}/${tarball_name}.tmp" "${TARBALL_URL["$DISTRO_ARCH"]}"; then
 				msg "${BLUE}[${RED}!${BLUE}] ${CYAN}Download failure, please check your network connection.${RST}"
 				rm -f "${DOWNLOAD_CACHE_DIR}/${tarball_name}.tmp"
 				return 1
@@ -316,12 +318,12 @@ command_install() {
 			msg "${BLUE}[${GREEN}*${BLUE}] ${CYAN}Using cached rootfs tarball...${RST}"
 		fi
 
-		if [ -n "${integrity_sha256}" ]; then
+		if [ -n "${TARBALL_SHA256["$DISTRO_ARCH"]}" ]; then
 			msg "${BLUE}[${GREEN}*${BLUE}] ${CYAN}Checking integrity, please wait...${RST}"
 			local actual_sha256
 			actual_sha256=$(sha256sum "${DOWNLOAD_CACHE_DIR}/${tarball_name}" | awk '{ print $1}')
 
-			if [ "${integrity_sha256}" != "${actual_sha256}" ]; then
+			if [ "${TARBALL_SHA256["$DISTRO_ARCH"]}" != "${actual_sha256}" ]; then
 				msg "${BLUE}[${RED}!${BLUE}] ${CYAN}Integrity checking failed. Try to redo installation again.${RST}"
 				rm -f "${DOWNLOAD_CACHE_DIR}/${tarball_name}"
 				return 1
@@ -336,7 +338,7 @@ command_install() {
 		#                             to avoid issues with Arch Linux bootstrap archives.
 		proot --link2symlink \
 			tar -C "${INSTALLED_ROOTFS_DIR}/${distro_name}" --warning=no-unknown-keyword \
-			--delay-directory-restore --preserve-permissions --strip="$DISTRO_TARBALL_STRIP_OPT" \
+			--delay-directory-restore --preserve-permissions --strip="$TARBALL_STRIP_OPT" \
 			-xf "${DOWNLOAD_CACHE_DIR}/${tarball_name}" --exclude='dev'||:
 
 		# Write important environment variables to profile file as /bin/login does not
@@ -460,52 +462,22 @@ run_proot_cmd() {
 	fi
 
 	local qemu_arg=""
+	if [ "$DISTRO_ARCH" != "$DEVICE_CPU_ARCH" ]; then
+		if [[ "$DISTRO_ARCH" =~ ^(aarch64|arm|i686|x86_64)$ ]]; then
+			msg
+			msg "${BRED}Error: DISTRO_ARCH has unknown value '$target_arch'. Valid values are: aarch64, arm, i686, x86_64."
+			msg
+			return 1
+		fi
 
-	if [ "$(uname -m)" != "$DISTRO_ARCH" ]; then
-		case "$DISTRO_ARCH" in
-			aarch64)
-				qemu_arg="-q @TERMUX_PREFIX@/bin/qemu-aarch64"
-				if [ ! -e "@TERMUX_PREFIX@/bin/qemu-aarch64" ]; then
-					msg
-					msg "${BRED}Error: package 'qemu-user-aarch64' is not installed.${RST}"
-					msg
-					return 1
-				fi
-				;;
-			armv7l|armv8l)
-				qemu_arg="-q @TERMUX_PREFIX@/bin/qemu-arm"
-				if [ ! -e "@TERMUX_PREFIX@/bin/qemu-arm" ]; then
-					msg
-					msg "${BRED}Error: package 'qemu-user-arm' is not installed.${RST}"
-					msg
-					return 1
-				fi
-				;;
-			i686)
-				qemu_arg="-q @TERMUX_PREFIX@/bin/qemu-i386"
-				if [ ! -e "@TERMUX_PREFIX@/bin/qemu-i386" ]; then
-					msg
-					msg "${BRED}Error: package 'qemu-user-i386' is not installed.${RST}"
-					msg
-					return 1
-				fi
-				;;
-			x86_64)
-				qemu_arg="-q @TERMUX_PREFIX@/bin/qemu-x86_64"
-				if [ ! -e "@TERMUX_PREFIX@/bin/qemu-x86_64" ]; then
-					msg
-					msg "${BRED}Error: package 'qemu-user-x86_64' is not installed.${RST}"
-					msg
-					return 1
-				fi
-				;;
-			*)
-				msg
-				msg "${BRED}Error: DISTRO_ARCH has unknown value '$DISTRO_ARCH'. Valid ones are: aarch64, armv7l, armv8l, i686, x86_64.${RST}"
-				msg
-				return 1
-				;;
-		esac
+		if [ ! -e "@TERMUX_PREFIX@/bin/qemu-${DISTRO_ARCH/i686/i386}" ]; then
+			msg
+			msg "${BRED}Error: package 'qemu-user-${DISTRO_ARCH/i686/i386}' is not installed.${RST}"
+			msg
+			return 1
+		fi
+
+		qemu_arg="-q @TERMUX_PREFIX@/bin/qemu-${DISTRO_ARCH/i686/i386}"
 	fi
 
 	proot \
@@ -1065,52 +1037,23 @@ command_login() {
 			return 1
 		fi
 
-		if [ "$(uname -m)" != "$target_arch" ]; then
+		if [ "$DEVICE_CPU_ARCH" != "$target_arch" ]; then
 			need_qemu=true
-			case "$target_arch" in
-				aarch64)
-					set -- "-q" "@TERMUX_PREFIX@/bin/qemu-aarch64" "$@"
-					if [ ! -e "@TERMUX_PREFIX@/bin/qemu-aarch64" ]; then
-						msg
-						msg "${BRED}Error: package 'qemu-user-aarch64' is not installed.${RST}"
-						msg
-						return 1
-					fi
-					;;
-				armv7l|armv8l)
-					set -- "-q" "@TERMUX_PREFIX@/bin/qemu-arm" "$@"
-					if [ ! -e "@TERMUX_PREFIX@/bin/qemu-arm" ]; then
-						msg
-						msg "${BRED}Error: package 'qemu-user-arm' is not installed.${RST}"
-						msg
-						return 1
-					fi
-					;;
-				i686)
-					set -- "-q" "@TERMUX_PREFIX@/bin/qemu-i386" "$@"
-					if [ ! -e "@TERMUX_PREFIX@/bin/qemu-i386" ]; then
-						msg
-						msg "${BRED}Error: package 'qemu-user-i386' is not installed.${RST}"
-						msg
-						return 1
-					fi
-					;;
-				x86_64)
-					set -- "-q" "@TERMUX_PREFIX@/bin/qemu-x86_64" "$@"
-					if [ ! -e "@TERMUX_PREFIX@/bin/qemu-x86_64" ]; then
-						msg
-						msg "${BRED}Error: package 'qemu-user-x86_64' is not installed.${RST}"
-						msg
-						return 1
-					fi
-					;;
-				*)
-					msg
-					msg "${BRED}Error: DISTRO_ARCH has unknown value '$target_arch'. Valid ones are: aarch64, armv7l, armv8l, i686, x86_64.${RST}"
-					msg
-					return 1
-					;;
-			esac
+			if [[ "$target_arch" =~ ^(aarch64|arm|i686|x86_64)$ ]]; then
+				msg
+				msg "${BRED}Error: DISTRO_ARCH has unknown value '$target_arch'. Valid values are: aarch64, arm, i686, x86_64."
+				msg
+				return 1
+			fi
+
+			if [ ! -e "@TERMUX_PREFIX@/bin/qemu-${target_arch/i686/i386}" ]; then
+				msg
+				msg "${BRED}Error: package 'qemu-user-${target_arch/i686/i386}' is not installed.${RST}"
+				msg
+				return 1
+			fi
+
+			set -- "-q" "@TERMUX_PREFIX@/bin/qemu-${target_arch/i686/i386}" "$@"
 		fi
 
 		if ! $no_kill_on_exit; then
@@ -1772,8 +1715,14 @@ done
 unset i
 
 # Determine a CPU architecture of device.
-DISTRO_ARCH=$(uname -m)
+case "$(uname -m)" in
+	# Note: armv8l means that device is running 32bit OS on 64bit CPU.
+	armv7l|armv8l) DEVICE_CPU_ARCH="arm";;
+	*) DEVICE_CPU_ARCH=$(uname -m);;
+esac
+DISTRO_ARCH=$DEVICE_CPU_ARCH
 
+declare -A TARBALL_URL TARBALL_SHA256
 declare -A SUPPORTED_DISTRIBUTIONS
 declare -A SUPPORTED_DISTRIBUTIONS_COMMENTS
 while read -r filename; do

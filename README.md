@@ -1,62 +1,51 @@
-A Bash script for managing proot'ed Linux distributions in Termux.
+# PRoot Distro
 
-For now it supports installation of these distributions:
+A Bash script wrapper for utility [proot] for easy management of chroot-based
+Linux distribution installations. It does not require root or any special ROM,
+kernel, etc. Everything you need to get started is the latest version of
+[Termux] application. See [Installing](#installation) for details.
 
-* Alpine Linux
-* Arch Linux / Arch Linux ARM
-* Debian Buster
-* Fedora 33
-* Gentoo
-* Ubuntu (18.04 / 20.04 / 21.04)
-* Void Linux
+PRoot Distro is not a virtual machine, neither a traditional chroot. It shares
+the same kernel as your Android system, so do not even try to update it through
+package manager - this will not work.
 
-*Note: only the latest LTS or rolling distributions will be supported
-in future and versioning will be removed.*
+This script should never be run as root user. If you do so, file permissions
+and SELinux labels could get messed up. There also possibility of damaging
+system if being executed as root. For safety, PRoot Distro checks the user id
+before run and refuses to work if detected user id `0` (root).
 
-## Usage example
+***
 
-Install package in Termux:
-```
-pkg install proot-distro
-```
+## Supported distributions
 
-Example on how to install Ubuntu and launch shell:
-```
-proot-distro install ubuntu-20.04
-proot-distro login ubuntu-20.04
-```
+PRoot Distro provides support only one version of distribution types, i.e. one
+of stable, LTS or rolling-release. Support of versioned distributions ended
+with branch 2.x. If you need a custom version, you will need to add it on your
+own. See [Adding distribution](#adding-distribution).
 
-You may create a distribution installation with custom name:
-```
-proot-distro install --override-alias ubuntu-testing ubuntu-20.04
-proot-distro login ubuntu-testing
-```
-This will allow to have multiple installations of same distribution.
+Here are the supported distributions:
 
-## Fixing dpkg errors
+* ~~Alpine Linux (3.14.x)~~
+* ~~Arch Linux / Arch Linux 32 / Arch Linux ARM~~
+* Debian (stable)
+* ~~Fedora 33~~
+* ~~Gentoo~~
+* Ubuntu (21.04)
+* ~~Void Linux~~
 
-1. udisks2
-   ```
-   dpkg: error processing package udisks2 (--configure):
-    installed udisks2 package post-installation script subprocess returned error exit status 1
-   ```
-   Solution:
-   ```
-   rm /var/lib/dpkg/info/udisks2.postinst
-   dpkg --configure -a
-   ```
-2. libfprint-2-2
-   ```
-   dpkg: error processing package libfprint-2-2:arm64 (--configure):
-    installed libfprint-2-2:arm64 package post-installation script subprocess returned error exit status 1
-   ```
-   Solution:
-   ```
-   rm /var/lib/dpkg/info/libfprint0:*.postinst
-   dpkg --configure -a
-   ```
-3. fprintd
-   ```
-   rm /var/lib/dpkg/info/fprintd.postinst
-   dpkg --configure -a
-   ```
+If desired distribution is not in the list, you can request it.
+
+## Installing
+
+TODO: fill this
+
+## How to use
+
+TODO: fill this
+
+## Adding distribution
+
+TODO: fill this
+
+[Termux]: <https://termux.com>
+[proot]: <https://github.com/termux/proot>
