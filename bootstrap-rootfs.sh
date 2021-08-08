@@ -136,8 +136,14 @@ TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/ubuntu-x86_64.tar.xz"
 TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/ubuntu-x86_64.tar.xz" | awk '{ print $1}')"
 
 distro_setup() {
+${TAB}# Enable additional repository components.
+${TAB}if [ "\$DISTRO_ARCH" = "amd64" ]; then
+${TAB}${TAB}echo "deb http://archive.ubuntu.com/ubuntu focal main universe multiverse" >> ./etc/apt/sources.list
+${TAB}else
+${TAB}${TAB}echo "deb http://ports.ubuntu.com/ubuntu-ports focal main universe multiverse" >> ./etc/apt/sources.list
+${TAB}fi
+
 ${TAB}# Don't update gvfs-daemons and udisks2
 ${TAB}run_proot_cmd apt-mark hold gvfs-daemons udisks2
 }
 EOF
-
