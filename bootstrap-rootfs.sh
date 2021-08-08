@@ -226,6 +226,8 @@ for arch in aarch64 armv7l i686 x86_64; do
 	chroot "${WORKDIR}/void-$(translate_arch "$arch")" xbps-reconfigure -fa
 	EOF
 
+	sudo rm -f "${WORKDIR}/void-$(translate_arch "$arch")"/var/cache/xbps/* || true
+
 	sudo tar -J -c \
 		-f "${ROOTFS_DIR}/void-$(translate_arch "$arch").tar.xz" \
 		-C "$WORKDIR" \
@@ -245,5 +247,10 @@ TARBALL_URL['i686']="${GIT_RELEASE_URL}/void-i686.tar.xz"
 TARBALL_SHA256['i686']="$(sha256sum "${ROOTFS_DIR}/void-i686.tar.xz" | awk '{ print $1}')"
 TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/void-x86_64.tar.xz"
 TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/void-x86_64.tar.xz" | awk '{ print $1}')"
+
+distro_setup() {
+${TAB}# Set default shell to bash.
+${TAB}run_proot_cmd usermod --shell /bin/bash root
+}
 EOF
 
