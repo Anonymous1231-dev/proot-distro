@@ -10,6 +10,13 @@ TARBALL_URL["x86_64"]="https://github.com/termux/proot-distro/releases/download/
 TARBALL_SHA256["x86_64"]="9f5e4ccb247f4360e1ad61450d16541e4067a2f6c131377ac5ea7a47c21431f3"
 
 distro_setup() {
+	# Include security & updates.
+	cat <<- EOF > ./etc/apt/sources.list
+	deb https://deb.debian.org/debian stable main contrib
+	deb https://deb.debian.org/debian-security/ stable/updates main contrib
+	deb https://deb.debian.org/debian stable-updates main contrib
+	EOF
+
 	# Don't update gvfs-daemons and udisks2
 	run_proot_cmd apt-mark hold gvfs-daemons udisks2
 }

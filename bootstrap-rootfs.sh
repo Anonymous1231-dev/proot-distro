@@ -92,6 +92,13 @@ TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/debian-x86_64.tar.xz"
 TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/debian-x86_64.tar.xz" | awk '{ print $1}')"
 
 distro_setup() {
+${TAB}# Include security & updates.
+${TAB}cat <<- EOF > ./etc/apt/sources.list
+${TAB}deb https://deb.debian.org/debian stable main contrib
+${TAB}deb https://deb.debian.org/debian-security/ stable/updates main contrib
+${TAB}deb https://deb.debian.org/debian stable-updates main contrib
+${TAB}EOF
+
 ${TAB}# Don't update gvfs-daemons and udisks2
 ${TAB}run_proot_cmd apt-mark hold gvfs-daemons udisks2
 }
