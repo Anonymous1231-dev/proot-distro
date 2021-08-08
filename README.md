@@ -37,7 +37,20 @@ If desired distribution is not in the list, you can request it.
 
 ## Installing
 
-TODO: fill this
+With package manager:
+```
+pkg install proot-distro
+```
+
+With git:
+```
+pkg install git
+git clone https://github.com/termux/proot-distro
+cd proot-distro
+./install.sh
+```
+
+Dependencies: bash, bzip2, coreutils, curl, findutils, gzip, ncurses-utils, proot, sed, tar, xz-utils
 
 ## How to use
 
