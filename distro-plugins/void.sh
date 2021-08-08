@@ -1,0 +1,10 @@
+DISTRO_NAME="Void Linux"
+
+TARBALL_URL['aarch64']="https://github.com/termux/proot-distro/releases/download/v1.10.0/void-aarch64.tar.xz"
+TARBALL_SHA256['aarch64']="640622362c3b9b928f6cfaa52db3d5f20c261a32e3f55c7cc049127b4576ed56"
+TARBALL_URL['arm']="https://github.com/termux/proot-distro/releases/download/v1.10.0/void-arm.tar.xz"
+TARBALL_SHA256['arm']="635de278b74f72b6a2b71f06f4ae70da2805d0f9e7104ef058f7b59573b9fa08"
+TARBALL_URL['i686']="https://github.com/termux/proot-distro/releases/download/v1.10.0/void-i686.tar.xz"
+TARBALL_SHA256['i686']="648cc20bec5b599eb065c11ad83df4fd00a434c4c2a959664721d16e47a55568"
+TARBALL_URL['x86_64']="https://github.com/termux/proot-distro/releases/download/v1.10.0/void-x86_64.tar.xz"
+TARBALL_SHA256['x86_64']="744487076de36ecbfcdba5214f29b9e0589d2dfba3ea672a21afe52a7b520f1a"

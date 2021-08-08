@@ -31,7 +31,7 @@ Here are the supported distributions:
 * ~~Fedora 33~~
 * ~~Gentoo~~
 * Ubuntu (21.04)
-* ~~Void Linux~~
+* Void Linux
 
 If desired distribution is not in the list, you can request it.
 

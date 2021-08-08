@@ -42,7 +42,7 @@ GIT_RELEASE_URL="https://github.com/termux/proot-distro/releases/download/${CURR
 translate_arch() {
 	case "$1" in
 		aarch64|arm64) echo "aarch64";;
-		armel|armhf|armv7|armv7a|armv8l) echo "arm";;
+		armel|armhf|armv7|armv7l|armv7a|armv8l) echo "arm";;
 		i386|i686|x86) echo "i686";;
 		amd64|x86_64) echo "x86_64";;
 		*)
@@ -199,3 +199,51 @@ ${TAB}# Don't update gvfs-daemons and udisks2
 ${TAB}run_proot_cmd apt-mark hold gvfs-daemons udisks2
 }
 EOF
+
+# Void Linux.
+printf "\n[*] Building Void Linux...\n"
+version="20210316"
+for arch in aarch64 armv7l i686 x86_64; do
+	curl --fail --location \
+		--output "${WORKDIR}/void-${arch}.tar.xz" \
+		"https://alpha.de.repo.voidlinux.org/live/${version}/void-${arch}-ROOTFS-${version}.tar.xz"
+
+	sudo mkdir -m 755 "${WORKDIR}/void-$(translate_arch "$arch")"
+	sudo tar -Jx \
+		-f "${WORKDIR}/void-${arch}.tar.xz" \
+		-C "${WORKDIR}/void-$(translate_arch "$arch")"
+
+	cat <<- EOF | sudo unshare -mpf bash -
+	rm -f "${WORKDIR}/void-$(translate_arch "$arch")/etc/resolv.conf"
+	echo "nameserver 1.1.1.1" > "${WORKDIR}/void-$(translate_arch "$arch")/etc/resolv.conf"
+	mount --bind /dev "${WORKDIR}/void-$(translate_arch "$arch")/dev"
+	mount --bind /proc "${WORKDIR}/void-$(translate_arch "$arch")/proc"
+	mount --bind /sys "${WORKDIR}/void-$(translate_arch "$arch")/sys"
+	chroot "${WORKDIR}/void-$(translate_arch "$arch")" xbps-install -Suy xbps
+	chroot "${WORKDIR}/void-$(translate_arch "$arch")" xbps-install -uy
+	chroot "${WORKDIR}/void-$(translate_arch "$arch")" xbps-install -y base-minimal
+	chroot "${WORKDIR}/void-$(translate_arch "$arch")" xbps-remove -y base-voidstrap
+	chroot "${WORKDIR}/void-$(translate_arch "$arch")" xbps-reconfigure -fa
+	EOF
+
+	sudo tar -J -c \
+		-f "${ROOTFS_DIR}/void-$(translate_arch "$arch").tar.xz" \
+		-C "$WORKDIR" \
+		"void-$(translate_arch "$arch")"
+        sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/void-$(translate_arch "$arch").tar.xz"
+done
+unset version
+
+cat <<- EOF > "${PLUGIN_DIR}/void.sh"
+DISTRO_NAME="Void Linux"
+
+TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/void-aarch64.tar.xz"
+TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/void-aarch64.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['arm']="${GIT_RELEASE_URL}/void-arm.tar.xz"
+TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/void-arm.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['i686']="${GIT_RELEASE_URL}/void-i686.tar.xz"
+TARBALL_SHA256['i686']="$(sha256sum "${ROOTFS_DIR}/void-i686.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/void-x86_64.tar.xz"
+TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/void-x86_64.tar.xz" | awk '{ print $1}')"
+EOF
+
