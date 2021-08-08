@@ -57,8 +57,59 @@ translate_arch() {
 # Reset workspace. This also deletes any previously made rootfs tarballs.
 sudo rm -rf "${ROOTFS_DIR:?}" "${WORKDIR:?}"
 mkdir -p "$ROOTFS_DIR" "$WORKDIR"
+cd "$WORKDIR"
+
+# Alpine Linux.
+printf "\n[*] Building Alpine Linux...\n"
+version="3.14.1"
+for arch in aarch64 armv7 x86 x86_64; do
+	curl --fail --location \
+		--output "${WORKDIR}/alpine-minirootfs-${version}-${arch}.tar.gz" \
+		"https://dl-cdn.alpinelinux.org/alpine/v${version:0:4}/releases/${arch}/alpine-minirootfs-${version}-${arch}.tar.gz"
+	curl --fail --location \
+		--output "${WORKDIR}/alpine-minirootfs-${version}-${arch}.tar.gz.sha256" \
+		"https://dl-cdn.alpinelinux.org/alpine/v${version:0:4}/releases/${arch}/alpine-minirootfs-${version}-${arch}.tar.gz.sha256"
+	sha256sum -c "${WORKDIR}/alpine-minirootfs-${version}-${arch}.tar.gz.sha256"
+
+	sudo mkdir -m 755 "${WORKDIR}/alpine-$(translate_arch "$arch")"
+	sudo tar -zx \
+		-f "${WORKDIR}/alpine-minirootfs-${version}-${arch}.tar.gz" \
+		-C "${WORKDIR}/alpine-$(translate_arch "$arch")"
+
+	cat <<- EOF | sudo unshare -mpf bash -
+	rm -f "${WORKDIR}/alpine-$(translate_arch "$arch")/etc/resolv.conf"
+	echo "nameserver 1.1.1.1" > "${WORKDIR}/alpine-$(translate_arch "$arch")/etc/resolv.conf"
+	mount --bind /dev "${WORKDIR}/alpine-$(translate_arch "$arch")/dev"
+	mount --bind /proc "${WORKDIR}/alpine-$(translate_arch "$arch")/proc"
+	mount --bind /sys "${WORKDIR}/alpine-$(translate_arch "$arch")/sys"
+	chroot "${WORKDIR}/alpine-$(translate_arch "$arch")" apk upgrade
+	EOF
+
+	sudo rm -f "${WORKDIR:?}/alpine-$(translate_arch "$arch")"/var/cache/apk/* || true
+
+	sudo tar -J -c \
+		-f "${ROOTFS_DIR}/alpine-$(translate_arch "$arch").tar.xz" \
+		-C "$WORKDIR" \
+		"alpine-$(translate_arch "$arch")"
+	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/alpine-$(translate_arch "$arch").tar.xz"
+done
+
+cat <<- EOF > "${PLUGIN_DIR}/alpine.sh"
+DISTRO_NAME="Alpine Linux ($version)"
+
+TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/alpine-aarch64.tar.xz"
+TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/alpine-aarch64.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['arm']="${GIT_RELEASE_URL}/alpine-arm.tar.xz"
+TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/alpine-arm.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['i686']="${GIT_RELEASE_URL}/alpine-i686.tar.xz"
+TARBALL_SHA256['i686']="$(sha256sum "${ROOTFS_DIR}/alpine-i686.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/alpine-x86_64.tar.xz"
+TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/alpine-x86_64.tar.xz" | awk '{ print $1}')"
+EOF
+unset version
 
 # Debian (stable).
+printf "\n[*] Building Debian...\n"
 for arch in arm64 armhf i386 amd64; do
 	sudo debootstrap \
 		--arch=${arch} \
@@ -105,6 +156,7 @@ ${TAB}run_proot_cmd apt-mark hold gvfs-daemons udisks2
 EOF
 
 # Ubuntu (21.04).
+printf "\n[*] Building Ubuntu...\n"
 for arch in arm64 armhf amd64; do
 	sudo debootstrap \
 		--arch=${arch} \

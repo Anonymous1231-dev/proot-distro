@@ -1,0 +1,10 @@
+DISTRO_NAME="Alpine Linux (3.14.1)"
+
+TARBALL_URL['aarch64']="https://github.com/termux/proot-distro/releases/download/v1.10.0/alpine-aarch64.tar.xz"
+TARBALL_SHA256['aarch64']="ac8583fab07c4c4edb5f094a3969df19820a02329696e337725cb33bbab91812"
+TARBALL_URL['arm']="https://github.com/termux/proot-distro/releases/download/v1.10.0/alpine-arm.tar.xz"
+TARBALL_SHA256['arm']="90bd0227dcd6c396eb057a3bf7d727b8c2ad031a48641f1d632bf00c4d9cf8d5"
+TARBALL_URL['i686']="https://github.com/termux/proot-distro/releases/download/v1.10.0/alpine-i686.tar.xz"
+TARBALL_SHA256['i686']="a5449ddad41af736f030477ff3df16414ee2a368180403675b356838982dd9d6"
+TARBALL_URL['x86_64']="https://github.com/termux/proot-distro/releases/download/v1.10.0/alpine-x86_64.tar.xz"
+TARBALL_SHA256['x86_64']="c12a8b0c1aea19578eacda37d533e9a3465391f7d423ef1ab83514cda05cf815"
