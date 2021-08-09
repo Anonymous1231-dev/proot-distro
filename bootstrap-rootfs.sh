@@ -42,7 +42,7 @@ GIT_RELEASE_URL="https://github.com/termux/proot-distro/releases/download/${CURR
 translate_arch() {
 	case "$1" in
 		aarch64|arm64) echo "aarch64";;
-		armel|armhf|armv7|armv7l|armv7a|armv8l) echo "arm";;
+		armel|armhf|armhfp|armv7|armv7l|armv7a|armv8l) echo "arm";;
 		i386|i686|x86) echo "i686";;
 		amd64|x86_64) echo "x86_64";;
 		*)
@@ -72,7 +72,7 @@ for arch in aarch64 armv7 x86 x86_64; do
 	sha256sum -c "${WORKDIR}/alpine-minirootfs-${version}-${arch}.tar.gz.sha256"
 
 	sudo mkdir -m 755 "${WORKDIR}/alpine-$(translate_arch "$arch")"
-	sudo tar -zx \
+	sudo tar -zxp \
 		-f "${WORKDIR}/alpine-minirootfs-${version}-${arch}.tar.gz" \
 		-C "${WORKDIR}/alpine-$(translate_arch "$arch")"
 
@@ -116,8 +116,8 @@ for arch in aarch64 armv7; do
 		--output "${WORKDIR}/archlinux-${arch}.tar.gz" \
 		"http://os.archlinuxarm.org/os/ArchLinuxARM-${arch}-latest.tar.gz"
 
-	sudo mkdir -p "${WORKDIR}/archlinux-$(translate_arch "$arch")"
-	sudo tar -zxf "${WORKDIR}/archlinux-${arch}.tar.gz" \
+	sudo mkdir -m 755 "${WORKDIR}/archlinux-$(translate_arch "$arch")"
+	sudo tar -zxpf "${WORKDIR}/archlinux-${arch}.tar.gz" \
 		-C "${WORKDIR}/archlinux-$(translate_arch "$arch")"
 
 	cat <<- EOF | sudo unshare -mpf bash -e -
@@ -153,8 +153,8 @@ curl --fail --location \
 	"https://mirror.rackspace.com/archlinux/iso/${version}/archlinux-bootstrap-${version}-x86_64.tar.gz"
 unset version
 
-sudo mkdir -p "${WORKDIR}/archlinux-bootstrap"
-sudo tar -zx --strip-components=1 \
+sudo mkdir -m 755 "${WORKDIR}/archlinux-bootstrap"
+sudo tar -zxp --strip-components=1 \
 	-f "${WORKDIR}/archlinux-x86_64.tar.gz" \
 	-C "${WORKDIR}/archlinux-bootstrap"
 
@@ -251,6 +251,38 @@ ${TAB}run_proot_cmd apt-mark hold gvfs-daemons udisks2
 }
 EOF
 
+# Fedora 34.
+version="34-1.2"
+for arch in aarch64 armhfp x86_64; do
+	curl --fail --location \
+		--output "${WORKDIR}/fedora-${version}-${arch}.tar.xz" \
+		"https://mirror.de.leaseweb.net/fedora/linux/releases/${version:0:2}/Container/${arch}/images/Fedora-Container-Base-${version}.${arch}.tar.xz"
+
+	mkdir "${WORKDIR}/fedora-$(translate_arch "$arch")"
+	sudo tar -Jx --strip-components=1 \
+		-f "${WORKDIR}/fedora-${version}-${arch}.tar.xz" \
+		-C "${WORKDIR}/fedora-$(translate_arch "$arch")"
+	sudo mkdir -m 755 "${WORKDIR}/fedora-$(translate_arch "$arch")/fedora-$(translate_arch "$arch")"
+	sudo tar -xpf "${WORKDIR}/fedora-$(translate_arch "$arch")"/layer.tar \
+		-C "${WORKDIR}/fedora-$(translate_arch "$arch")/fedora-$(translate_arch "$arch")"
+
+	sudo tar -Jcf "${ROOTFS_DIR}/fedora-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz" \
+		-C "${WORKDIR}/fedora-$(translate_arch "$arch")" \
+		"fedora-$(translate_arch "$arch")"
+done
+unset arch
+
+cat <<- EOF > "${PLUGIN_DIR}/fedora.sh"
+DISTRO_NAME="Fedora (${version:0:2})"
+
+TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/fedora-aarch64-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/fedora-aarch64-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['arm']="${GIT_RELEASE_URL}/fedora-arm-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/fedora-arm-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/fedora-x86_64-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/fedora-x86_64-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+EOF
+
 # Ubuntu (20.04).
 printf "\n[*] Building Ubuntu...\n"
 for arch in arm64 armhf amd64; do
@@ -305,7 +337,7 @@ for arch in aarch64 armv7l i686 x86_64; do
 		"https://alpha.de.repo.voidlinux.org/live/${version}/void-${arch}-ROOTFS-${version}.tar.xz"
 
 	sudo mkdir -m 755 "${WORKDIR}/void-$(translate_arch "$arch")"
-	sudo tar -Jx \
+	sudo tar -Jxp \
 		-f "${WORKDIR}/void-${arch}.tar.xz" \
 		-C "${WORKDIR}/void-$(translate_arch "$arch")"
 

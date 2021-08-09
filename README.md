@@ -28,9 +28,9 @@ Here are the supported distributions:
 * Alpine Linux (3.14.x)
 * Arch Linux / Arch Linux 32 / Arch Linux ARM
 * Debian (stable)
-* ~~Fedora 33~~
+* Fedora 34
 * ~~Gentoo~~
-* Ubuntu (21.04)
+* Ubuntu (20.04)
 * Void Linux
 
 If desired distribution is not in the list, you can request it.
