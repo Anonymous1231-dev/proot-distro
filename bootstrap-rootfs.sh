@@ -269,6 +269,7 @@ for arch in aarch64 armhfp x86_64; do
 	sudo tar -Jcf "${ROOTFS_DIR}/fedora-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz" \
 		-C "${WORKDIR}/fedora-$(translate_arch "$arch")" \
 		"fedora-$(translate_arch "$arch")"
+	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/fedora-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz"
 done
 unset arch
 
