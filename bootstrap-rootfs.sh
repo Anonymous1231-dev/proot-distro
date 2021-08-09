@@ -252,6 +252,7 @@ ${TAB}run_proot_cmd apt-mark hold gvfs-daemons udisks2
 EOF
 
 # Fedora 34.
+printf "\n[*] Building Fedora...\n"
 version="34-1.2"
 for arch in aarch64 armhfp x86_64; do
 	curl --fail --location \
