@@ -59,7 +59,6 @@ sudo rm -rf "${ROOTFS_DIR:?}" "${WORKDIR:?}"
 mkdir -p "$ROOTFS_DIR" "$WORKDIR"
 cd "$WORKDIR"
 
-
 # Alpine Linux.
 printf "\n[*] Building Alpine Linux...\n"
 version="3.14.1"
@@ -252,7 +251,7 @@ ${TAB}run_proot_cmd apt-mark hold gvfs-daemons udisks2
 }
 EOF
 
-# Ubuntu (21.04).
+# Ubuntu (20.04).
 printf "\n[*] Building Ubuntu...\n"
 for arch in arm64 armhf amd64; do
 	sudo debootstrap \
@@ -260,7 +259,7 @@ for arch in arm64 armhf amd64; do
 		--no-check-gpg \
 		--variant=minbase \
 		--include=dbus-user-session,systemd,gvfs-daemons,libsystemd0,systemd-sysv,udisks2,wget \
-		hirsute \
+		focal \
 		"${WORKDIR:?}/ubuntu-$(translate_arch "$arch")"
 
 	sudo rm -f "${WORKDIR:?}/ubuntu-$(translate_arch "$arch")"/var/cache/apt/archives/* || true
@@ -275,7 +274,7 @@ done
 unset arch
 
 cat <<- EOF > "${PLUGIN_DIR}/ubuntu.sh"
-DISTRO_NAME="Ubuntu (21.04)"
+DISTRO_NAME="Ubuntu (20.04)"
 
 TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/ubuntu-aarch64.tar.xz"
 TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/ubuntu-aarch64.tar.xz" | awk '{ print $1}')"
