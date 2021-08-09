@@ -1,11 +1,11 @@
 DISTRO_NAME="Ubuntu (20.04)"
 
-TARBALL_URL['aarch64']="https://github.com/termux/proot-distro/releases/download/v1.10.0/ubuntu-aarch64.tar.xz"
-TARBALL_SHA256['aarch64']="b262f18521cb9ca7a46a83093f2d992f50ecd5d7d87d919541833f6095f8ae0f"
-TARBALL_URL['arm']="https://github.com/termux/proot-distro/releases/download/v1.10.0/ubuntu-arm.tar.xz"
-TARBALL_SHA256['arm']="e8bcaea0076925f448d93494e424decdf391b96bb0904497ecc6dc29d70bc58b"
-TARBALL_URL['x86_64']="https://github.com/termux/proot-distro/releases/download/v1.10.0/ubuntu-x86_64.tar.xz"
-TARBALL_SHA256['x86_64']="39a1d14bfd9250e2fb7a09436237f465b96b7698de2e37cd247837080458ee56"
+TARBALL_URL['aarch64']="https://github.com/termux/proot-distro/releases/download/v1.10.1/ubuntu-aarch64-pd-v1.10.1.tar.xz"
+TARBALL_SHA256['aarch64']="145394dda8aaa1ec09d22b23479e9c95eba986515afb8aec68be5d9b79e8db87"
+TARBALL_URL['arm']="https://github.com/termux/proot-distro/releases/download/v1.10.1/ubuntu-arm-pd-v1.10.1.tar.xz"
+TARBALL_SHA256['arm']="0673b01a6d592b9058525a038093617cb91e1c257baf95be82287dd3f1e6f747"
+TARBALL_URL['x86_64']="https://github.com/termux/proot-distro/releases/download/v1.10.1/ubuntu-x86_64-pd-v1.10.1.tar.xz"
+TARBALL_SHA256['x86_64']="597ec5859bde0577a31c5958aae9fd1eee897d02753af4a6e15816ebfd03301a"
 
 distro_setup() {
 	# Enable additional repository components.
