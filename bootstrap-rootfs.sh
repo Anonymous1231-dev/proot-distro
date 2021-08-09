@@ -88,23 +88,23 @@ for arch in aarch64 armv7 x86 x86_64; do
 	sudo rm -f "${WORKDIR:?}/alpine-$(translate_arch "$arch")"/var/cache/apk/* || true
 
 	sudo tar -J -c \
-		-f "${ROOTFS_DIR}/alpine-$(translate_arch "$arch").tar.xz" \
+		-f "${ROOTFS_DIR}/alpine-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz" \
 		-C "$WORKDIR" \
 		"alpine-$(translate_arch "$arch")"
-	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/alpine-$(translate_arch "$arch").tar.xz"
+	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/alpine-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz"
 done
 
 cat <<- EOF > "${PLUGIN_DIR}/alpine.sh"
 DISTRO_NAME="Alpine Linux ($version)"
 
-TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/alpine-aarch64.tar.xz"
-TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/alpine-aarch64.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['arm']="${GIT_RELEASE_URL}/alpine-arm.tar.xz"
-TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/alpine-arm.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['i686']="${GIT_RELEASE_URL}/alpine-i686.tar.xz"
-TARBALL_SHA256['i686']="$(sha256sum "${ROOTFS_DIR}/alpine-i686.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/alpine-x86_64.tar.xz"
-TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/alpine-x86_64.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/alpine-aarch64-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/alpine-aarch64-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['arm']="${GIT_RELEASE_URL}/alpine-arm-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/alpine-arm-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['i686']="${GIT_RELEASE_URL}/alpine-i686-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['i686']="$(sha256sum "${ROOTFS_DIR}/alpine-i686-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/alpine-x86_64-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/alpine-x86_64-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
 EOF
 unset version
 
@@ -140,10 +140,10 @@ for arch in aarch64 armv7; do
 	sudo rm -f "${WORKDIR:?}/archlinux-$(translate_arch "$arch")"/var/cache/pacman/* || true
 
 	sudo tar -J -c \
-		-f "${ROOTFS_DIR}/archlinux-$(translate_arch "$arch").tar.xz" \
+		-f "${ROOTFS_DIR}/archlinux-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz" \
 		-C "$WORKDIR" \
 		"archlinux-$(translate_arch "$arch")"
-	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/archlinux-$(translate_arch "$arch").tar.xz"
+	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/archlinux-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz"
 done
 unset arch
 
@@ -184,24 +184,24 @@ EOF
 
 for arch in i686 x86_64; do
 	sudo rm -f "${WORKDIR:?}/archlinux-bootstrap/archlinux-${arch}"/var/cache/pacman/* || true
-	sudo tar -Jcf "${ROOTFS_DIR}/archlinux-${arch}.tar.xz" \
+	sudo tar -Jcf "${ROOTFS_DIR}/archlinux-${arch}-pd-${CURRENT_VERSION}.tar.xz" \
 		-C "${WORKDIR}/archlinux-bootstrap" \
 		"archlinux-${arch}"
-	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/archlinux-${arch}.tar.xz"
+	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/archlinux-${arch}-pd-${CURRENT_VERSION}.tar.xz"
 done
 unset arch
 
 cat <<- EOF > "${PLUGIN_DIR}/archlinux.sh"
 DISTRO_NAME="Arch Linux"
 
-TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/archlinux-aarch64.tar.xz"
-TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/archlinux-aarch64.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['arm']="${GIT_RELEASE_URL}/archlinux-arm.tar.xz"
-TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/archlinux-arm.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['i686']="${GIT_RELEASE_URL}/archlinux-i686.tar.xz"
-TARBALL_SHA256['i686']="$(sha256sum "${ROOTFS_DIR}/archlinux-i686.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/archlinux-x86_64.tar.xz"
-TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/archlinux-x86_64.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/archlinux-aarch64-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/archlinux-aarch64-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['arm']="${GIT_RELEASE_URL}/archlinux-arm-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/archlinux-arm-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['i686']="${GIT_RELEASE_URL}/archlinux-i686-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['i686']="$(sha256sum "${ROOTFS_DIR}/archlinux-i686-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/archlinux-x86_64-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/archlinux-x86_64-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
 EOF
 
 # Debian (stable).
@@ -219,24 +219,24 @@ for arch in arm64 armhf i386 amd64; do
 	sudo rm -f "${WORKDIR:?}/debian-$(translate_arch "$arch")"/var/lib/apt/lists/* || true
 
 	sudo tar -j -c \
-		-f "${ROOTFS_DIR}/debian-$(translate_arch "$arch").tar.xz" \
+		-f "${ROOTFS_DIR}/debian-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz" \
 		-C "$WORKDIR" \
 		"debian-$(translate_arch "$arch")"
-	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/debian-$(translate_arch "$arch").tar.xz"
+	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/debian-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz"
 done
 unset arch
 
 cat <<- EOF > "${PLUGIN_DIR}/debian.sh"
 DISTRO_NAME="Debian (stable)"
 
-TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/debian-aarch64.tar.xz"
-TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/debian-aarch64.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['arm']="${GIT_RELEASE_URL}/debian-arm.tar.xz"
-TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/debian-arm.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['i686']="${GIT_RELEASE_URL}/debian-i686.tar.xz"
-TARBALL_SHA256['i686']="$(sha256sum "${ROOTFS_DIR}/debian-i686.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/debian-x86_64.tar.xz"
-TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/debian-x86_64.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/debian-aarch64-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/debian-aarch64-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['arm']="${GIT_RELEASE_URL}/debian-arm-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/debian-arm-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['i686']="${GIT_RELEASE_URL}/debian-i686-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['i686']="$(sha256sum "${ROOTFS_DIR}/debian-i686-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/debian-x86_64-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/debian-x86_64-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
 
 distro_setup() {
 ${TAB}# Include security & updates.
@@ -266,22 +266,22 @@ for arch in arm64 armhf amd64; do
 	sudo rm -f "${WORKDIR:?}/ubuntu-$(translate_arch "$arch")"/var/lib/apt/lists/* || true
 
 	sudo tar -j -c \
-		-f "${ROOTFS_DIR}/ubuntu-$(translate_arch "$arch").tar.xz" \
+		-f "${ROOTFS_DIR}/ubuntu-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz" \
 		-C "$WORKDIR" \
 		"ubuntu-$(translate_arch "$arch")"
-	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/ubuntu-$(translate_arch "$arch").tar.xz"
+	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/ubuntu-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz"
 done
 unset arch
 
 cat <<- EOF > "${PLUGIN_DIR}/ubuntu.sh"
 DISTRO_NAME="Ubuntu (20.04)"
 
-TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/ubuntu-aarch64.tar.xz"
-TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/ubuntu-aarch64.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['arm']="${GIT_RELEASE_URL}/ubuntu-arm.tar.xz"
-TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/ubuntu-arm.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/ubuntu-x86_64.tar.xz"
-TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/ubuntu-x86_64.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/ubuntu-aarch64-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/ubuntu-aarch64-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['arm']="${GIT_RELEASE_URL}/ubuntu-arm-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/ubuntu-arm-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/ubuntu-x86_64-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/ubuntu-x86_64-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
 
 distro_setup() {
 ${TAB}# Enable additional repository components.
@@ -325,24 +325,24 @@ for arch in aarch64 armv7l i686 x86_64; do
 	sudo rm -f "${WORKDIR}/void-$(translate_arch "$arch")"/var/cache/xbps/* || true
 
 	sudo tar -J -c \
-		-f "${ROOTFS_DIR}/void-$(translate_arch "$arch").tar.xz" \
+		-f "${ROOTFS_DIR}/void-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz" \
 		-C "$WORKDIR" \
 		"void-$(translate_arch "$arch")"
-        sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/void-$(translate_arch "$arch").tar.xz"
+        sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/void-$(translate_arch "$arch")-pd-${CURRENT_VERSION}.tar.xz"
 done
 unset version
 
 cat <<- EOF > "${PLUGIN_DIR}/void.sh"
 DISTRO_NAME="Void Linux"
 
-TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/void-aarch64.tar.xz"
-TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/void-aarch64.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['arm']="${GIT_RELEASE_URL}/void-arm.tar.xz"
-TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/void-arm.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['i686']="${GIT_RELEASE_URL}/void-i686.tar.xz"
-TARBALL_SHA256['i686']="$(sha256sum "${ROOTFS_DIR}/void-i686.tar.xz" | awk '{ print $1}')"
-TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/void-x86_64.tar.xz"
-TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/void-x86_64.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/void-aarch64-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/void-aarch64-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['arm']="${GIT_RELEASE_URL}/void-arm-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/void-arm-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['i686']="${GIT_RELEASE_URL}/void-i686-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['i686']="$(sha256sum "${ROOTFS_DIR}/void-i686-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/void-x86_64-pd-${CURRENT_VERSION}.tar.xz"
+TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/void-x86_64-pd-${CURRENT_VERSION}.tar.xz" | awk '{ print $1}')"
 
 distro_setup() {
 ${TAB}# Set default shell to bash.
