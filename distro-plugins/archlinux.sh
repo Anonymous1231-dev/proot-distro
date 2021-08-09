@@ -1,0 +1,10 @@
+DISTRO_NAME="Arch Linux"
+
+TARBALL_URL['aarch64']="https://github.com/termux/proot-distro/releases/download/v1.10.0/archlinux-aarch64.tar.xz"
+TARBALL_SHA256['aarch64']="701ad5896f1292c8a3f14146d43da983d7df5eae4d6ef89ab785a93e4474fb0e"
+TARBALL_URL['arm']="https://github.com/termux/proot-distro/releases/download/v1.10.0/archlinux-arm.tar.xz"
+TARBALL_SHA256['arm']="70eafe300c26be1a66368ba05497a8952731c592eedc568d2d94356eb411d77d"
+TARBALL_URL['i686']="https://github.com/termux/proot-distro/releases/download/v1.10.0/archlinux-i686.tar.xz"
+TARBALL_SHA256['i686']="4ad2f098d48a7dc5f0ff3788e52b34470d2ba20a2fc9a7ab5cf7e6894e82169b"
+TARBALL_URL['x86_64']="https://github.com/termux/proot-distro/releases/download/v1.10.0/archlinux-x86_64.tar.xz"
+TARBALL_SHA256['x86_64']="ec9730138b371a1e6fbc5654ccf6d53a3a0e57768092d108f3d89898a058b3d8"

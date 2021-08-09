@@ -59,6 +59,7 @@ sudo rm -rf "${ROOTFS_DIR:?}" "${WORKDIR:?}"
 mkdir -p "$ROOTFS_DIR" "$WORKDIR"
 cd "$WORKDIR"
 
+
 # Alpine Linux.
 printf "\n[*] Building Alpine Linux...\n"
 version="3.14.1"
@@ -76,7 +77,7 @@ for arch in aarch64 armv7 x86 x86_64; do
 		-f "${WORKDIR}/alpine-minirootfs-${version}-${arch}.tar.gz" \
 		-C "${WORKDIR}/alpine-$(translate_arch "$arch")"
 
-	cat <<- EOF | sudo unshare -mpf bash -
+	cat <<- EOF | sudo unshare -mpf bash -e -
 	rm -f "${WORKDIR}/alpine-$(translate_arch "$arch")/etc/resolv.conf"
 	echo "nameserver 1.1.1.1" > "${WORKDIR}/alpine-$(translate_arch "$arch")/etc/resolv.conf"
 	mount --bind /dev "${WORKDIR}/alpine-$(translate_arch "$arch")/dev"
@@ -107,6 +108,102 @@ TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/alpine-x86_64.tar.xz"
 TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/alpine-x86_64.tar.xz" | awk '{ print $1}')"
 EOF
 unset version
+
+# Arch Linux (original, ARM, 32)
+printf "\n[*] Building Arch Linux...\n"
+
+for arch in aarch64 armv7; do
+	curl --fail --location \
+		--output "${WORKDIR}/archlinux-${arch}.tar.gz" \
+		"http://os.archlinuxarm.org/os/ArchLinuxARM-${arch}-latest.tar.gz"
+
+	sudo mkdir -p "${WORKDIR}/archlinux-$(translate_arch "$arch")"
+	sudo tar -zxf "${WORKDIR}/archlinux-${arch}.tar.gz" \
+		-C "${WORKDIR}/archlinux-$(translate_arch "$arch")"
+
+	cat <<- EOF | sudo unshare -mpf bash -e -
+	rm -f "${WORKDIR}/archlinux-$(translate_arch "$arch")/etc/resolv.conf"
+	echo "nameserver 1.1.1.1" > "${WORKDIR}/archlinux-$(translate_arch "$arch")/etc/resolv.conf"
+	mount --bind "${WORKDIR}/archlinux-$(translate_arch "$arch")/" "${WORKDIR}/archlinux-$(translate_arch "$arch")/"
+	mount --bind /dev "${WORKDIR}/archlinux-$(translate_arch "$arch")/dev"
+	mount --bind /proc "${WORKDIR}/archlinux-$(translate_arch "$arch")/proc"
+	mount --bind /sys "${WORKDIR}/archlinux-$(translate_arch "$arch")/sys"
+	chroot "${WORKDIR}/archlinux-$(translate_arch "$arch")" pacman-key --init
+	chroot "${WORKDIR}/archlinux-$(translate_arch "$arch")" pacman-key --populate archlinuxarm
+	if [ "$arch" = "aarch64" ]; then
+	chroot "${WORKDIR}/archlinux-$(translate_arch "$arch")" pacman -Rnsc --noconfirm linux-aarch64
+	else
+	chroot "${WORKDIR}/archlinux-$(translate_arch "$arch")" pacman -Rnsc --noconfirm linux-armv7
+	fi
+	chroot "${WORKDIR}/archlinux-$(translate_arch "$arch")" pacman -Syu --noconfirm
+	EOF
+
+	sudo rm -f "${WORKDIR:?}/archlinux-$(translate_arch "$arch")"/var/cache/pacman/* || true
+
+	sudo tar -J -c \
+		-f "${ROOTFS_DIR}/archlinux-$(translate_arch "$arch").tar.xz" \
+		-C "$WORKDIR" \
+		"archlinux-$(translate_arch "$arch")"
+	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/archlinux-$(translate_arch "$arch").tar.xz"
+done
+unset arch
+
+version="2021.08.01"
+curl --fail --location \
+	--output "${WORKDIR}/archlinux-x86_64.tar.gz" \
+	"https://mirror.rackspace.com/archlinux/iso/${version}/archlinux-bootstrap-${version}-x86_64.tar.gz"
+unset version
+
+sudo mkdir -p "${WORKDIR}/archlinux-bootstrap"
+sudo tar -zx --strip-components=1 \
+	-f "${WORKDIR}/archlinux-x86_64.tar.gz" \
+	-C "${WORKDIR}/archlinux-bootstrap"
+
+cat <<- EOF | sudo unshare -mpf bash -e -
+rm -f "${WORKDIR}/archlinux-bootstrap/etc/resolv.conf"
+echo "nameserver 1.1.1.1" > "${WORKDIR}/archlinux-bootstrap/etc/resolv.conf"
+mount --bind "${WORKDIR}/archlinux-bootstrap/" "${WORKDIR}/archlinux-bootstrap/"
+mount --bind /dev "${WORKDIR}/archlinux-bootstrap/dev"
+mount --bind /proc "${WORKDIR}/archlinux-bootstrap/proc"
+mount --bind /sys "${WORKDIR}/archlinux-bootstrap/sys"
+mkdir "${WORKDIR}/archlinux-bootstrap/archlinux-i686"
+mkdir "${WORKDIR}/archlinux-bootstrap/archlinux-x86_64"
+chroot "${WORKDIR}/archlinux-bootstrap" pacman-key --init
+chroot "${WORKDIR}/archlinux-bootstrap" pacman-key --populate archlinux
+echo 'Server = http://mirror.rackspace.com/archlinux/\$repo/os/\$arch' > \
+	"${WORKDIR}/archlinux-bootstrap/etc/pacman.d/mirrorlist"
+chroot "${WORKDIR}/archlinux-bootstrap" pacstrap /archlinux-x86_64 base
+sed -i 's|Architecture = auto|Architecture = i686|' \
+	"${WORKDIR}/archlinux-bootstrap/etc/pacman.conf"
+sed -i 's|Required DatabaseOptional|Never|' \
+	"${WORKDIR}/archlinux-bootstrap/etc/pacman.conf"
+echo 'Server = https://de.mirror.archlinux32.org/\$arch/\$repo' > \
+	"${WORKDIR}/archlinux-bootstrap/etc/pacman.d/mirrorlist"
+chroot "${WORKDIR}/archlinux-bootstrap" pacman -Scc --noconfirm
+chroot "${WORKDIR}/archlinux-bootstrap" pacstrap /archlinux-i686 base
+EOF
+
+for arch in i686 x86_64; do
+	sudo rm -f "${WORKDIR:?}/archlinux-bootstrap/archlinux-${arch}"/var/cache/pacman/* || true
+	sudo tar -Jcf "${ROOTFS_DIR}/archlinux-${arch}.tar.xz" \
+		-C "${WORKDIR}/archlinux-bootstrap" \
+		"archlinux-${arch}"
+	sudo chown $(id -un):$(id -gn) "${ROOTFS_DIR}/archlinux-${arch}.tar.xz"
+done
+unset arch
+
+cat <<- EOF > "${PLUGIN_DIR}/archlinux.sh"
+DISTRO_NAME="Arch Linux"
+
+TARBALL_URL['aarch64']="${GIT_RELEASE_URL}/archlinux-aarch64.tar.xz"
+TARBALL_SHA256['aarch64']="$(sha256sum "${ROOTFS_DIR}/archlinux-aarch64.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['arm']="${GIT_RELEASE_URL}/archlinux-arm.tar.xz"
+TARBALL_SHA256['arm']="$(sha256sum "${ROOTFS_DIR}/archlinux-arm.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['i686']="${GIT_RELEASE_URL}/archlinux-i686.tar.xz"
+TARBALL_SHA256['i686']="$(sha256sum "${ROOTFS_DIR}/archlinux-i686.tar.xz" | awk '{ print $1}')"
+TARBALL_URL['x86_64']="${GIT_RELEASE_URL}/archlinux-x86_64.tar.xz"
+TARBALL_SHA256['x86_64']="$(sha256sum "${ROOTFS_DIR}/archlinux-x86_64.tar.xz" | awk '{ print $1}')"
+EOF
 
 # Debian (stable).
 printf "\n[*] Building Debian...\n"
@@ -213,7 +310,7 @@ for arch in aarch64 armv7l i686 x86_64; do
 		-f "${WORKDIR}/void-${arch}.tar.xz" \
 		-C "${WORKDIR}/void-$(translate_arch "$arch")"
 
-	cat <<- EOF | sudo unshare -mpf bash -
+	cat <<- EOF | sudo unshare -mpf bash -e -
 	rm -f "${WORKDIR}/void-$(translate_arch "$arch")/etc/resolv.conf"
 	echo "nameserver 1.1.1.1" > "${WORKDIR}/void-$(translate_arch "$arch")/etc/resolv.conf"
 	mount --bind /dev "${WORKDIR}/void-$(translate_arch "$arch")/dev"

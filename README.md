@@ -26,7 +26,7 @@ own. See [Adding distribution](#adding-distribution).
 Here are the supported distributions:
 
 * Alpine Linux (3.14.x)
-* ~~Arch Linux / Arch Linux 32 / Arch Linux ARM~~
+* Arch Linux / Arch Linux 32 / Arch Linux ARM
 * Debian (stable)
 * ~~Fedora 33~~
 * ~~Gentoo~~
